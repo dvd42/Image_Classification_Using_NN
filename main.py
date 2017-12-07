@@ -3,6 +3,9 @@ from torch import autograd,nn,optim
 import torch.nn.functional as F
 from matplotlib import pyplot as plt
 import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+
 
 
 
@@ -15,52 +18,74 @@ else:
  	print("Running Model using CPU :(")
 
 
-samples = 1000
+dataset = load_iris()
+
+X = dataset.data.astype("float64")
+y = dataset.target
+
+#Add some noise
+X = np.append(X,np.random.rand(10000,X.shape[1]),axis=0)
+y = np.append(y,np.random.randint(3,size=10000))
 
 
-train_batch_size = int(samples*0.75)
-test_batch_size = int(samples*0.25)
-input_size = 4
 
-hidden_size = 4
-num_classes = 4
-learning_rate = 0.01
-epochs = 300
+X_train,X_test,y_train,y_test = train_test_split(X,y,train_size=0.8,stratify=y)
 
-
-train_losses = []
-test_losses = []
+num_classes = np.bincount(y).size
+learning_rate = 0.001
+epochs = 400
+hidden_size = 2
 
 
-in1 = autograd.Variable(torch.rand(train_batch_size,input_size).type(dtype))
-in2 = autograd.Variable(torch.rand(test_batch_size,input_size).type(dtype))
-train_target = autograd.Variable(torch.rand(train_batch_size).type(dtype)*num_classes).long()
-test_target = autograd.Variable(torch.rand(test_batch_size).type(dtype)*num_classes).long()
+train_losses = np.array([])
+test_losses = np.array([])
+
+
+X_train = autograd.Variable(torch.Tensor(X_train).type(dtype))
+y_train = autograd.Variable(torch.IntTensor(y_train).type(dtype)).long()
+X_test = autograd.Variable(torch.Tensor(X_test).type(dtype))
+y_test = autograd.Variable(torch.IntTensor(y_test).type(dtype)).long()
+
 
 class Net(nn.Module):
 	def __init__(self,input_size,hidden_size,num_classes):
 		super().__init__()
 		self.h1 = nn.Linear(input_size,hidden_size)
-		self.h2 = nn.Linear(hidden_size,num_classes)
+		self.h2 = nn.Linear(hidden_size,hidden_size)
+		self.h3 = nn.Linear(hidden_size,hidden_size)
+		self.h4 = nn.Linear(hidden_size,hidden_size)
+		self.h5 = nn.Linear(hidden_size,hidden_size)
+		self.h6 = nn.Linear(hidden_size,hidden_size)
+		self.h7 = nn.Linear(hidden_size,hidden_size)
+		self.h8 = nn.Linear(hidden_size,num_classes)
 
 
 	def forward(self,x):
 
 		x = self.h1(x)
-		x = F.dropout(x,p=0.2)
-		x = F.tanh(x)
+		x = F.relu(x)
 		x = self.h2(x)
+		x = F.dropout(x,p=0.2)
+		x = F.relu(x)
+		x = self.h3(x)
+		x = F.relu(x)
+		x = self.h4(x)
 		x = F.dropout(x,p=0.3)
 		x = F.relu(x)
+		x = self.h5(x)
 		x = F.relu(x)
+		x = self.h6(x)
 		x = F.dropout(x,p=0.5)
 		x = F.relu(x)
-		x = F.softmax(x)
-		
+		x = self.h7(x)
+		x = F.relu(x)
+		x = self.h8(x)
+		x = F.softmax(x)	
+
 		return x
 
 
-model = Net(input_size=input_size,hidden_size=hidden_size,num_classes=num_classes).type(dtype)
+model = Net(input_size=X_train.size()[1],hidden_size=hidden_size,num_classes=num_classes).type(dtype)
 opt = optim.Adam(params=model.parameters(),lr=learning_rate)
 
 #Speeds up the training when using GPUs
@@ -69,10 +94,10 @@ model.fastest = True
 for epoch in range(epochs):
 
 	# Train
-	out = model(in1)
-	_, pred1 = out.max(1)
-	loss = F.nll_loss(out,train_target)
-	train_losses.append(loss.data[0])
+	out = model(X_train)
+	_, pred = out.max(1)
+	loss = F.cross_entropy(out,y_train)
+	train_losses = np.append(train_losses,loss.data[0])
 
 	#Learn
 	model.zero_grad()
@@ -80,29 +105,17 @@ for epoch in range(epochs):
 	opt.step()
 
 	# Test
-	out = model(in2)
-	_,pred2 = out.max(1)
-	loss = F.nll_loss(out,test_target)
-	test_losses.append(loss.data[0])
+	model.eval()
+	out = model(X_test)
+	_,pred = out.max(1)
+	loss = F.cross_entropy(out,y_test)
+	test_losses = np.append(test_losses,loss.data[0])
 
 
 plt.figure()
-plt.xlabel("epoch")
-plt.ylabel("loss")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
 plt.plot(np.arange(1,epochs+1),train_losses,'C1',label='Train error')
 plt.plot(np.arange(1,epochs+1),test_losses,'C2',label='Test error')
 plt.legend()
 plt.show()
-
-
-
-
-
-
-
-
-
-
-#model.zero_grad()
-#model.parameters()
-
