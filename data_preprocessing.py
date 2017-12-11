@@ -2,12 +2,9 @@ import torch
 import numpy as np
 import pickle
 from torch.autograd import Variable
-from sklearn.decomposition import PCA
-
-
  
 def load_data():
-	f = open('Data/TrainData/sift_sift_svm_traindata_K_199.pkl', 'rb')
+	f = open('Data/trainData/sift_sift_svm_traindata_K_199.pkl', 'rb')
 	X_train = pickle.load(f,encoding='latin1')
 	y_train = pickle.load(f,encoding='latin1')
 	f.close()
@@ -47,53 +44,72 @@ def load_data():
 
 
 
-	return X_train,X_test,y_train,y_test,unknown_data
+	return X_train,X_test,y_train-1,y_test-1,unknown_data
 
 
-def prepare_data(X_train,X_test,y_train,y_test,unknown_data):
+
+def prepare_data(X_train,X_test,y_train,y_test,unknown_data,ovr):
 
 	# Shuffle Data
 	training_set = np.append(X_train,y_train,axis=1)
 	test_set = np.append(X_test,y_test,axis=1)
+	np.random.shuffle(training_set)
 
+
+	"""
+	# TODO implement correct data augmentation
 	# Data Augmentation
 	flipped_images = np.fliplr(training_set[:,:-1])
 	flipped_images = np.append(flipped_images,training_set[:,-1].reshape((-1,1)),axis=1)
 	training_set = np.append(training_set,flipped_images,axis=0)
 	
-	np.random.shuffle(training_set)
-
+	"""
 
 	if torch.cuda.is_available():
 		dtype = torch.cuda.FloatTensor
-		print("Running Model using GPU")
 	else: 
  		dtype = torch.FloatTensor
- 		print("Running Model using CPU :(")
 
 
-	X_train = training_set[:,:-1]
-	y_train = training_set[:,-1]
-	X_test = test_set[:,:-1]
-	y_test = test_set[:,-1]
+ 	# Prepare the data for ovr network architecture	
+	if ovr:
+		
+		training_sets = []
+		testing_set = []
 
-	"""
-	# Get most important features
-	pca = PCA(n_components=50)
-	pca.fit(X_train)
-	X_train = pca.transform(X_train)
-	X_test = pca.transform(X_test)
-	unknown_data = pca.transform(unknown_data)
-	"""
+		for i in range(5):
+			y_train = np.copy(training_set[:,-1])
+			index_train = y_train == i
+			index_train = index_train.reshape((index_train.shape[0],))
+			y_train[~index_train] = 0
+			y_train[index_train] = 1
 
-	
-	print("Features",X_train.shape[1])
-	
-	X_train = Variable(torch.Tensor(X_train).type(dtype),requires_grad=True)
-	y_train = Variable(torch.Tensor(y_train).type(dtype),requires_grad=True).long()
-	X_test = Variable(torch.Tensor(X_test).type(dtype),requires_grad=True)
-	y_test = Variable(torch.Tensor(y_test).type(dtype),requires_grad=True).long()
-	unknown_data = Variable(torch.Tensor(unknown_data).type(dtype),requires_grad = True)
+			y_test = np.copy(test_set[:,-1])
+			index_test = y_test == i
+			index_test = index_test.reshape((index_test.shape[0],))
+			y_test[~index_test] = 0
+			y_test[index_test] = 1
 
 
-	return X_train,X_test,y_train-1,y_test-1,unknown_data,dtype
+			y_train = Variable(torch.Tensor(y_train).type(dtype)).long()
+			y_test = Variable(torch.Tensor(y_test).type(dtype)).long()
+			training_sets.append(y_train)
+			testing_set.append(y_test)
+
+
+		X_train = Variable(torch.Tensor(training_set[:,:-1]).type(dtype),requires_grad=True)
+		X_test = Variable(torch.Tensor(test_set[:,:-1]).type(dtype))
+		unknown_data = Variable(torch.Tensor(unknown_data).type(dtype))
+
+		return X_train,X_test,training_sets,testing_set,unknown_data,dtype
+
+
+
+	X_train = Variable(torch.Tensor(training_set[:,:-1]).type(dtype),requires_grad=True)
+	y_train = Variable(torch.Tensor(training_set[:,-1]).type(dtype)).long()
+	X_test = Variable(torch.Tensor(test_set[:,:-1]).type(dtype))
+	y_test = Variable(torch.Tensor(test_set[:,-1]).type(dtype)).long()
+	unknown_data = Variable(torch.Tensor(unknown_data).type(dtype))
+
+
+	return X_train,X_test,y_train,y_test,unknown_data,dtype

@@ -2,10 +2,7 @@ from sklearn.metrics import accuracy_score,precision_score,recall_score,f1_score
 from matplotlib import pyplot as plt
 import numpy as np
 
-def compute_metrics(y_test,y_pred):
-
-	y_true = y_test.data.cpu().numpy()
-	y_pred = y_pred.data.cpu().numpy()
+def compute_metrics(y_true,y_pred):
 
 	#Store Metrics
 	accuracy = accuracy_score(y_true,y_pred)
@@ -18,31 +15,49 @@ def compute_metrics(y_test,y_pred):
 
 
 
-def show_results(accuracy,precision,recall,f_score,train_losses,test_losses,epochs,num_classes,y_pred,y_true,model):
+def show_results(accuracy,precision,recall,f_score,num_classes,y_pred,y_true,train_losses,test_losses,ovr):
 
+	y_true = y_true.astype("int64")
 
-	y_pred = y_pred.data.cpu().numpy()
-	y_true = y_true.data.cpu().numpy()
-
-	print(model)
 	# Build Confusion Matrix
 	confMat = np.zeros((num_classes,num_classes))    
 	for pred in range(y_pred.size):
 		confMat[y_true[pred],y_pred[pred]] +=1
 
 	print(confMat)
-	print("Car",y_true[y_true[y_pred==0] == 0].size)
-	print("Dog",y_true[y_true[y_pred==1] == 1].size)
-	print("Bicycle",y_true[y_true[y_pred==2] == 2].size)
-	print("Motorbike",y_true[y_true[y_pred==3] == 3].size)
-	print("Person",y_true[y_true[y_pred==4] == 4].size)
+
+	TP = np.diagonal(confMat)
+
+	print("Car",TP[0])
+	print("Dog",TP[1])
+	print("Bicycle",TP[2])
+	print("Motorbike",TP[3])
+	print("Person",TP[4])
 
 	print("Accuracy: %.2f\nPrecision: %.2f\nRecall: %.2f\nF1_score: %.2f\n" %(accuracy,precision,recall,f_score))
 
-	plt.figure()
-	plt.xlabel("Epoch")
-	plt.ylabel("Loss")
-	plt.plot(np.arange(1,epochs+1),train_losses,'C1',label='Train error')
-	plt.plot(np.arange(1,epochs+1),test_losses,'C2',label='Test error')
-	plt.legend()
-	plt.show()
+	if not ovr:
+		plt.figure()
+		plt.xlabel("Epoch")
+		plt.ylabel("Losses")
+		plt.plot(train_losses,'C1',label="Train Error")
+		plt.plot(test_losses,'C2',label="Test Error")
+		plt.legend()
+		plt.show()
+
+	else:
+		plt.figure()
+		plt.xlabel("Epoch")
+		plt.ylabel("Losses")
+		plt.plot(train_losses[0],'C0',label="Car Train Error")
+		plt.plot(test_losses[0],'C1',label="Car Test Error")
+		plt.plot(train_losses[1],'C2',label="Dog Train Error")
+		plt.plot(test_losses[1],'C3',label="Dog Test Error")
+		plt.plot(train_losses[2],'C4',label="Bicycle Train Error")
+		plt.plot(test_losses[2],'C5',label="Bicycle Test Error")
+		plt.plot(train_losses[3],'C6',label="Motorbike Train Error")
+		plt.plot(test_losses[3],'C7',label="Motorbike Test Error")
+		plt.plot(train_losses[4],'C8',label="Person Train Error")
+		plt.plot(test_losses[4],'C9',label="Person Test Error")
+		plt.legend()
+		plt.show()
