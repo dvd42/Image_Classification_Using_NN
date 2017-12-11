@@ -171,9 +171,9 @@ def run_full_net(num_classes,learning_rate,ovr):
 	X_train,X_test,y_train,y_test,unknown_data,dtype = dp.prepare_data(X_train,X_test,y_train,y_test,unknown_data,ovr)
 
 	model = Net1(num_classes).type(dtype)
+	opt = optim.Adamax(params=model.parameters(),lr=learning_rate)
 	print(model)
 
-	opt = optim.Adamax(params=model.parameters(),lr=learning_rate)
 	
 	train_losses,test_losses = train_validate(X_train,y_train,X_test,y_test,opt,model,"All",ovr)
 

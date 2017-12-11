@@ -2,6 +2,8 @@ from sklearn.metrics import accuracy_score,precision_score,recall_score,f1_score
 from matplotlib import pyplot as plt
 import numpy as np
 
+import runtime_parser as rp
+
 def compute_metrics(y_true,y_pred):
 
 	#Store Metrics
@@ -34,30 +36,50 @@ def show_results(accuracy,precision,recall,f_score,num_classes,y_pred,y_true,tra
 	print("Motorbike",TP[3])
 	print("Person",TP[4])
 
-	print("Accuracy: %.2f\nPrecision: %.2f\nRecall: %.2f\nF1_score: %.2f\n" %(accuracy,precision,recall,f_score))
 
 	if not ovr:
-		plt.figure()
-		plt.xlabel("Epoch")
-		plt.ylabel("Losses")
-		plt.plot(train_losses,'C1',label="Train Error")
-		plt.plot(test_losses,'C2',label="Test Error")
-		plt.legend()
+		fig = plt.figure()
+		fig.set_facecolor("grey")
+		plt.suptitle("Learning Rate = %.2f\nMini_Batch_Size: %d\nTolerance: %d" % (rp.lr,rp.size,rp.tolerance)
+			,fontsize=11,style="oblique",fontweight="bold",bbox={"facecolor":"white","alpha": 0.5,"pad":5},ha="center")
+
+		ax = fig.add_subplot(111)
+		ax.text(1,0.1, "Accuracy: %.2f\nPrecision: %.2f\nRecall: %.2f\nF1_score: %.2f" %(accuracy,precision,recall,f_score), style='oblique',
+        bbox={'facecolor':'white', 'alpha':0.5, 'pad':10},fontweight="bold",fontsize=11)
+		ax.set_xlabel("Epoch")
+		ax.set_ylabel("Losses")
+		ax.set_facecolor('black')
+
+		ax.plot(train_losses,'C2',label="Train Error",marker=">")
+		ax.plot(test_losses,'C2',label="Test Error",marker="o")
+		ax.legend()
+		ax.axis([0,len(train_losses),0,max(test_losses) + 0.5])
 		plt.show()
 
 	else:
-		plt.figure()
-		plt.xlabel("Epoch")
-		plt.ylabel("Losses")
-		plt.plot(train_losses[0],'C0',label="Car Train Error")
-		plt.plot(test_losses[0],'C1',label="Car Test Error")
-		plt.plot(train_losses[1],'C2',label="Dog Train Error")
-		plt.plot(test_losses[1],'C3',label="Dog Test Error")
-		plt.plot(train_losses[2],'C4',label="Bicycle Train Error")
-		plt.plot(test_losses[2],'C5',label="Bicycle Test Error")
-		plt.plot(train_losses[3],'C6',label="Motorbike Train Error")
-		plt.plot(test_losses[3],'C7',label="Motorbike Test Error")
-		plt.plot(train_losses[4],'C8',label="Person Train Error")
-		plt.plot(test_losses[4],'C9',label="Person Test Error")
-		plt.legend()
+		fig = plt.figure()
+		fig.set_facecolor("grey")
+		plt.suptitle("Learning Rate = %.2f\nMini_Batch_Size: %d\nTolerance: %d" % (rp.lr,rp.size,rp.tolerance)
+			,fontsize=11,style="oblique",fontweight="bold",bbox={"facecolor":"white","alpha": 0.5,"pad":5},ha="center")
+
+		ax = fig.add_subplot(111)
+		ax.text(1.5,0.1, "Accuracy: %.2f\nPrecision: %.2f\nRecall: %.2f\nF1_score: %.2f" %(accuracy,precision,recall,f_score), style='oblique',
+        bbox={'facecolor':'white', 'alpha':0.5, 'pad':10},fontweight="bold",fontsize=11)
+		ax.set_xlabel("Epoch")
+		ax.set_ylabel("Losses")
+		ax.set_facecolor('black')
+
+		ax.plot(train_losses[0],'C0',label="Car Train Error",marker=">")
+		ax.plot(test_losses[0],'C0',label="Car Test Error",marker="o")
+		ax.plot(train_losses[1],'C1',label="Dog Train Error",marker=">")
+		ax.plot(test_losses[1],'C1',label="Dog Test Error",marker="o")
+		ax.plot(train_losses[2],'C2',label="Bicycle Train Error",marker=">")
+		ax.plot(test_losses[2],'C2',label="Bicycle Test Error",marker="o")
+		ax.plot(train_losses[3],'C3',label="Motorbike Train Error",marker=">")
+		ax.plot(test_losses[3],'C3',label="Motorbike Test Error",marker="o")
+		ax.plot(train_losses[4],'C4',label="Person Train Error",marker=">")
+		ax.plot(test_losses[4],'C4',label="Person Test Error",marker="o")
+		ax.legend()
+		# TODO adapt ymax
+		ax.axis([0,len(max(train_losses,key=len)),0,1])
 		plt.show()
