@@ -56,14 +56,9 @@ def prepare_data(X_train,X_test,y_train,y_test,unknown_data,ovr):
 	np.random.shuffle(training_set)
 
 
-	"""
-	# TODO implement correct data augmentation
-	# Data Augmentation
-	flipped_images = np.fliplr(training_set[:,:-1])
-	flipped_images = np.append(flipped_images,training_set[:,-1].reshape((-1,1)),axis=1)
-	training_set = np.append(training_set,flipped_images,axis=0)
 	
-	"""
+	# TODO: Implement data augmentation
+	
 
 	if torch.cuda.is_available():
 		dtype = torch.cuda.FloatTensor
@@ -97,15 +92,14 @@ def prepare_data(X_train,X_test,y_train,y_test,unknown_data,ovr):
 			testing_set.append(y_test)
 
 
-		X_train = Variable(torch.Tensor(training_set[:,:-1]).type(dtype),requires_grad=True)
+		X_train = Variable(torch.Tensor(training_set[:,:-1]).type(dtype))
 		X_test = Variable(torch.Tensor(test_set[:,:-1]).type(dtype))
 		unknown_data = Variable(torch.Tensor(unknown_data).type(dtype))
 
 		return X_train,X_test,training_sets,testing_set,unknown_data,dtype
 
 
-
-	X_train = Variable(torch.Tensor(training_set[:,:-1]).type(dtype),requires_grad=True)
+	X_train = Variable(torch.Tensor(training_set[:,:-1]).type(dtype))
 	y_train = Variable(torch.Tensor(training_set[:,-1]).type(dtype)).long()
 	X_test = Variable(torch.Tensor(test_set[:,:-1]).type(dtype))
 	y_test = Variable(torch.Tensor(test_set[:,-1]).type(dtype)).long()
