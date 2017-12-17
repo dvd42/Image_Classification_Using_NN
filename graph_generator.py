@@ -1,13 +1,7 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torchvision
-from torch.autograd import Variable
 from tensorboardX import graph_onnx
-
-
-
 from tensorboardX import SummaryWriter
+
 
 def generate_graph(model,input):
     with SummaryWriter() as w:

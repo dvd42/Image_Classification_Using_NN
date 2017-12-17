@@ -21,7 +21,6 @@ def compute_metrics(y_true,y_pred):
 
 def show_results(accuracy,precision,recall,f_score,num_classes,train_losses,test_losses,ovr):
 
-	#TODO: create annotation in plot at best error
 	if not ovr:
 		fig = plt.figure()
 		fig.set_facecolor("grey")
@@ -41,6 +40,13 @@ def show_results(accuracy,precision,recall,f_score,num_classes,train_losses,test
 		ax.plot(test_losses,'C2',label="Test Error",marker="o")
 		ax.legend().draggable()
 		ax.axis([0,len(test_losses) + 3,0,max(max(test_losses),max(train_losses)) + 0.2])
+
+		annotation = (np.argmin(test_losses) ,min(test_losses))
+
+
+		ax.annotate('Best Model',color='white',fontweight='bold',fontsize=11,xy=annotation, xycoords='data',xytext=(annotation[0]-1,annotation[1] + 0.15),
+			arrowprops=dict(facecolor='white', shrink=0.05),ha='center',va='bottom')
+
 
 		if rp.verbose:
 			plt.show()
@@ -70,6 +76,7 @@ def show_results(accuracy,precision,recall,f_score,num_classes,train_losses,test
 		ax.plot(train_losses[4],'C4',label="Person Train Error",marker=">")
 		ax.plot(test_losses[4],'C4',label="Person Test Error",marker="o")
 		ax.legend().draggable()
+
 		ymax = 0
 		for loss in test_losses:
 			if max(loss) > ymax: ymax = max(loss)  

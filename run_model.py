@@ -10,6 +10,7 @@ import data_preprocessing as dp
 import metrics as m
 import file_writer as fw
 import graph_generator as g
+import runtime_parser as rp
 
 
 def run_full_net(num_classes,learning_rate,learning_rate_decay,width,depth,mini_batch_size,ovr,iterations):
@@ -26,10 +27,10 @@ def run_full_net(num_classes,learning_rate,learning_rate_decay,width,depth,mini_
 	for _ in range(iterations):
 
 		model = NN.Net1(num_classes,depth=depth,width=width).type(dtype)
-		# TODO: use SGD with nesterov and momentum decreasing learning_rate each time the validation error doesnt improve
+		# TODO: use SGD with nesterov and momentum decreasing learning_rate each time the validation error doesnt improve (low)
+		# TODO: check the default adam parameters and run the model with those (high)
 		opt = optim.Adam(params=model.parameters(),lr=learning_rate,weight_decay=learning_rate_decay)
 		
-
 		train_losses,test_losses = model.train_validate(X_train,y_train,X_test,y_test,opt,mini_batch_size,"All",ovr,dtype)
 
 		model = torch.load("Models/Best_Model_All.pkl")
@@ -51,27 +52,25 @@ def run_full_net(num_classes,learning_rate,learning_rate_decay,width,depth,mini_
 		if np.mean(test_losses) < np.mean(best_test_losses):
 			best_test_losses = test_losses
 			best_train_losses = train_losses
+
+
 	accuracy = np.mean(accuracy)
 	precision = np.mean(precision)
 	recall = np.mean(recall)
 	f_score = np.mean(f_score)
 
-	m.show_results(accuracy,precision,recall,f_score,num_classes,train_losses,test_losses,ovr)
+	m.show_results(accuracy,precision,recall,f_score,num_classes,best_train_losses,best_test_losses,ovr)
 	
+
 	g.generate_graph(model,X_train)
-	
-	if not rp.verbose:
-		fw.create_data_csv(learning_rate,learning_rate_decay,depth,width,mini_batch_size,accuracy)
-
-
-
+	fw.create_data_csv(learning_rate,learning_rate_decay,depth,width,mini_batch_size,accuracy)
 
 	# Store unknown_data prediction 
 	y_pred,_ = model.test(unknown_data)
 	fw.store_prediction(y_pred.data.cpu().numpy(),ovr)
 
 
-#FIXME: check weights this is not performing well
+#FIXME: check weights this is not performing well (medium)
 def run_ovr_nets(num_classes,learning_rate,learning_rate_decay,width,depth,mini_batch_size,ovr,iterations):
 
 	precision = accuracy = recall = f_score = np.array([])

@@ -5,30 +5,37 @@ import torch.nn.functional as F
 import numpy as np
 import pickle
 
+
 import runtime_parser as rp
 
-
-#TODO: automate dropout layers
 class Net1(nn.Module):
 	def __init__(self,num_classes,depth,width):
 		super().__init__()
 
+		self.depth = depth
+		self.width = width
+
+
 		fan_in = 199
-		fan_out = int(199*width)
-		for i in range(depth-1):
+		fan_out = int(199*self.width)
+		for i in range(self.depth-1):
 			self.__setattr__('h' + str(i), nn.Linear(fan_in,fan_out))
 			fan_in = fan_out
-			fan_out = int(fan_in*width)
+			fan_out = int(fan_in*self.width)
 
 		self.__setattr__('fc',nn.Linear(fan_in,num_classes))
-		self.__setattr__('dropout0.5',nn.Dropout(0.5,inplace=True))
+		#self.__setattr__('dropout0.5',nn.Dropout(0.5,inplace=True))
 
 
 	def forward(self,x):
 
-		x = F.leaky_relu(self.__getattr__('h0')(x))
-		self.__getattr__('dropout0.5')(x)
-		x = F.leaky_relu(self.__getattr__('h1')(x))
+
+		for i in range(self.depth - 1):
+			#if i == self.depth - 2:
+				#self.__getattr__('dropout0.5')(x)
+			
+			x = F.leaky_relu(self.__getattr__('h' + str(i))(x))
+			
 		x = self.__getattr__('fc')(x)
 		
 		return x
@@ -85,12 +92,11 @@ class Net1(nn.Module):
 			test_losses = np.append(test_losses,loss.data[0])
 
 
-			stop,no_improvement,best_loss = self.hara_kiri(best_loss,test_losses[-1],no_improvement,n_class)	
-
-
+			stop,no_improvement,best_loss = self.hara_kiri(best_loss,test_losses[-1],no_improvement,rp.tolerance,n_class)	
 
 
 		return train_losses,test_losses
+
 
 	def test(self,new_data):
 
@@ -101,7 +107,7 @@ class Net1(nn.Module):
 		return y_pred,out
 
 
-	def hara_kiri(self,best_loss,current_loss,no_improvement,n_class):
+	def hara_kiri(self,best_loss,current_loss,no_improvement,tolerance,n_class):
 
 		if current_loss < best_loss:
 			torch.save(self,"Models/Best_Model_" + n_class + ".pkl")
@@ -111,4 +117,4 @@ class Net1(nn.Module):
 		else:
 			no_improvement +=1
 
-		return True if no_improvement == rp.tolerance else False,no_improvement,best_loss
+		return True if no_improvement == tolerance else False,no_improvement,best_loss

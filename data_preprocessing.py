@@ -50,15 +50,7 @@ def load_data():
 
 def prepare_data(X_train,X_test,y_train,y_test,unknown_data,ovr):
 
-	# Shuffle Data
-	training_set = np.append(X_train,y_train,axis=1)
-	test_set = np.append(X_test,y_test,axis=1)
-	np.random.shuffle(training_set)
 
-
-	
-	# TODO: Implement data augmentation
-	
 
 	if torch.cuda.is_available():
 		dtype = torch.cuda.FloatTensor
@@ -66,6 +58,16 @@ def prepare_data(X_train,X_test,y_train,y_test,unknown_data,ovr):
  		dtype = torch.FloatTensor
 
 
+	# Shuffle Data
+	training_set = np.append(X_train,y_train,axis=1)
+	test_set = np.append(X_test,y_test,axis=1)
+	np.random.shuffle(training_set)
+
+
+	
+	# TODO: Implement data augmentation (high)
+	
+	
  	# Prepare the data for ovr network architecture	
 	if ovr:
 		

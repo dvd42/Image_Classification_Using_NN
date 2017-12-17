@@ -4,8 +4,7 @@ import file_writer as fw
 import run_model 
 
 
-#TODO: batch normalization?
-#TODO: gradient noise?
+#TODO: gradient noise? (low)
 
 if rp.verbose:
 	print("Running %s model with:\nLearning Rate = %s\nLearning_Rate_Decay = %s\nDepth = %d\nWidth = %s \nBatch_size: %d\nTolerance: %d\nIterations: %d\n" 	% ("ovr" if rp.ovr else "5 classes",str(rp.lr),str(rp.lrd),rp.depth,str(rp.width),rp.size,rp.tolerance,rp.iterations))

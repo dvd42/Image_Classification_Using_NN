@@ -37,10 +37,9 @@ def create_data_csv(learning_rate,learning_rate_decay,depth,width,mini_batch_siz
 
 	with open("Results/results.csv", 'a') as myfile:
 		wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-		if os.stat("Results/results_adam.csv").st_size == 0:
+		if os.stat("Results/results.csv").st_size == 0:
 			row0 = ["Learning Rate","Rate Decay","Depth","Width","Batch_Size","Accuracy"]
 			wr.writerow(row0)
-
 
 		wr.writerow(row)
 
