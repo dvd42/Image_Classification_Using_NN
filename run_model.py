@@ -13,7 +13,7 @@ import graph_generator as g
 import runtime_parser as rp
 
 
-def run_full_net(num_classes,learning_rate,learning_rate_decay,width,depth,mini_batch_size,ovr,iterations):
+def run_full_net(num_classes,learning_rate,width,depth,mini_batch_size,ovr):
 
 	precision = accuracy = recall = f_score = np.array([])
 
@@ -24,19 +24,15 @@ def run_full_net(num_classes,learning_rate,learning_rate_decay,width,depth,mini_
 	X_train,X_test,y_train,y_test,unknown_data,dtype = dp.prepare_data(X_train,X_test,y_train,y_test,unknown_data,ovr)
 
 
-	for _ in range(iterations):
+	for _ in range(10):
 
 		model = NN.Net1(num_classes,depth=depth,width=width).type(dtype)
-		# TODO: use SGD with nesterov and momentum decreasing learning_rate each time the validation error doesnt improve (low)
-		# TODO: check the default adam parameters and run the model with those (high)
-		opt = optim.Adam(params=model.parameters(),lr=learning_rate,weight_decay=learning_rate_decay)
-		
+		opt = optim.SGD(params=model.parameters(),lr=learning_rate,momentum=rp.m,nesterov=True)
 		train_losses,test_losses = model.train_validate(X_train,y_train,X_test,y_test,opt,mini_batch_size,"All",ovr,dtype)
 
 		model = torch.load("Models/Best_Model_All.pkl")
 
-		y_pred,out = model.test(X_test)
-
+		y_pred,_ = model.test(X_test)
 
 		# Calculate metrics
 		y_true = y_test.data.cpu().numpy()
@@ -61,42 +57,43 @@ def run_full_net(num_classes,learning_rate,learning_rate_decay,width,depth,mini_
 
 	m.show_results(accuracy,precision,recall,f_score,num_classes,best_train_losses,best_test_losses,ovr)
 	
-
 	g.generate_graph(model,X_train)
-	fw.create_data_csv(learning_rate,learning_rate_decay,depth,width,mini_batch_size,accuracy)
+
+	if not rp.verbose:
+		fw.create_data_csv(learning_rate,depth,width,mini_batch_size,rp.m,len(test_losses)-10,accuracy)
 
 	# Store unknown_data prediction 
 	y_pred,_ = model.test(unknown_data)
-	fw.store_prediction(y_pred.data.cpu().numpy(),ovr)
+	fw.store_prediction(y_pred.data.cpu().numpy())
 
 
-#FIXME: check weights this is not performing well (medium)
-def run_ovr_nets(num_classes,learning_rate,learning_rate_decay,width,depth,mini_batch_size,ovr,iterations):
+
+def run_ovr_nets(num_classes,learning_rate,width,depth,mini_batch_size,ovr):
 
 	precision = accuracy = recall = f_score = np.array([])
 
 	best_test_losses = np.array([float('inf')])
 	best_train_losses = np.array([float('inf')])
 
-	for _ in range(iterations):
+	for _ in range(10):
 
 		X_train,X_test,y_train,y_test,unknown_data = dp.load_data()
 		X_train,X_test,training_sets,testing_sets,unknown_data,dtype = dp.prepare_data(X_train,X_test,y_train,y_test,
 																					   unknown_data,ovr)	
 		model0 = NN.Net1(num_classes,depth=depth,width=width).type(dtype)
-		opt0 = optim.Adam(params=model0.parameters(),lr=learning_rate,weight_decay=learning_rate_decay)
+		opt0 = optim.Adam(params=model0.parameters(),lr=learning_rate)
 
 		model1 = NN.Net1(num_classes,depth=depth,width=width).type(dtype)
-		opt1 = optim.Adam(params=model1.parameters(),lr=learning_rate,weight_decay=learning_rate_decay)
+		opt1 = optim.Adam(params=model1.parameters(),lr=learning_rate)
 
 		model2 = NN.Net1(num_classes,depth=depth,width=width).type(dtype)
-		opt2 = optim.Adam(params=model2.parameters(),lr=learning_rate,weight_decay=learning_rate_decay)
+		opt2 = optim.Adam(params=model2.parameters(),lr=learning_rate)
 
 		model3 = NN.Net1(num_classes,depth=depth,width=width).type(dtype)
-		opt3 = optim.Adam(params=model3.parameters(),lr=learning_rate,weight_decay=learning_rate_decay)
+		opt3 = optim.Adam(params=model3.parameters(),lr=learning_rate)
 
 		model4 = NN.Net1(num_classes,depth=depth,width=width).type(dtype)
-		opt4 = optim.Adam(params=model4.parameters(),lr=learning_rate,weight_decay=learning_rate_decay)
+		opt4 = optim.Adam(params=model4.parameters(),lr=learning_rate)
 
 
 		train_losses0,test_losses0 = model0.train_validate(X_train,training_sets[0],X_test,testing_sets[0],opt0,mini_batch_size,"Car",ovr,dtype)
@@ -123,19 +120,15 @@ def run_ovr_nets(num_classes,learning_rate,learning_rate_decay,width,depth,mini_
 
 
 		for model in models:
-			_,out = model.test(X_test)
+			_,out = model.test(X_test)			
 			predictions = np.append(predictions,F.softmax(out,-1).data[:,1])
-			
-
-
+		
 		predictions = np.reshape(predictions,(-1,5))
-
-
+		
 		y_pred = np.append(y_pred,np.argmax(predictions,axis=1))
 
 		a,p,r,f = m.compute_metrics(y_test,y_pred)
-	
-
+			
 		accuracy = np.append(accuracy,a)
 		precision = np.append(precision,p)
 		recall = np.append(recall,r)

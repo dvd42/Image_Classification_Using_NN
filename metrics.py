@@ -16,16 +16,13 @@ def compute_metrics(y_true,y_pred):
 	return accuracy,precision,recall,f_score
 
 
-
-
-
 def show_results(accuracy,precision,recall,f_score,num_classes,train_losses,test_losses,ovr):
 
 	if not ovr:
 		fig = plt.figure()
 		fig.set_facecolor("grey")
-		plt.suptitle("Learning Rate = %s\nRate Decay = %s\nDepth = %d\nWidth = %s \nBatch Size: %d\nTolerance: %d" 
-			% (str(rp.lr),str(rp.lrd),rp.depth,str(rp.width),rp.size,rp.tolerance)
+		plt.suptitle("Learning Rate = %s\nMomentum = %s\nDepth = %d\nWidth = %s \nBatch_size: %d"
+		% (str(rp.lr),str(rp.m),rp.depth,str(rp.width),rp.size)
 			,fontsize=11,style="oblique",fontweight="bold",bbox={"facecolor":"#cdc9c9","pad":5},ha="center")
 
 		ax = fig.add_subplot(111)
@@ -54,8 +51,8 @@ def show_results(accuracy,precision,recall,f_score,num_classes,train_losses,test
 	else:
 		fig = plt.figure()
 		fig.set_facecolor("grey")
-		plt.suptitle("Learning Rate = %s\nRate Decay = %s\nDepth = %d\nWidth = %s \nBatch Size: %d\nTolerance: %d" 
-			% (str(rp.lr),str(rp.lrd),rp.depth,str(rp.width),rp.size,rp.tolerance)
+		plt.suptitle("Learning Rate = %s\nMomentum = %s\nDepth = %d\nWidth = %s \nBatch_size: %d"
+		% (str(rp.lr),str(rp.m),rp.depth,str(rp.width),rp.size)
 			,fontsize=11,style="oblique",fontweight="bold",bbox={"facecolor":"#cdc9c9","pad":5},ha="center")
 
 		ax = fig.add_subplot(111)

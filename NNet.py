@@ -1,10 +1,10 @@
 import torch
 from torch import nn
+import torch.nn.init as init
 from torch.autograd import Variable
 import torch.nn.functional as F
 import numpy as np
 import pickle
-
 
 import runtime_parser as rp
 
@@ -15,27 +15,29 @@ class Net1(nn.Module):
 		self.depth = depth
 		self.width = width
 
-
 		fan_in = 199
 		fan_out = int(199*self.width)
 		for i in range(self.depth-1):
 			self.__setattr__('h' + str(i), nn.Linear(fan_in,fan_out))
+			#init.xavier_uniform(self.__getattr__('h' + str(i)).weight,gain=init.calculate_gain('leaky_relu'))
+
+			if i == self.depth-3:
+				self.__setattr__('dropout0.5',nn.Dropout(0.5,inplace=True))
+
 			fan_in = fan_out
 			fan_out = int(fan_in*self.width)
 
 		self.__setattr__('fc',nn.Linear(fan_in,num_classes))
-		#self.__setattr__('dropout0.5',nn.Dropout(0.5,inplace=True))
-
+		#init.xavier_uniform(self.__getattr__('fc').weight,gain=init.calculate_gain('leaky_relu'))
 
 	def forward(self,x):
 
 
 		for i in range(self.depth - 1):
-			#if i == self.depth - 2:
-				#self.__getattr__('dropout0.5')(x)
-			
 			x = F.leaky_relu(self.__getattr__('h' + str(i))(x))
-			
+			if i == self.depth-3:
+				self.__getattr__('dropout0.5')(x)	
+
 		x = self.__getattr__('fc')(x)
 		
 		return x
@@ -48,9 +50,10 @@ class Net1(nn.Module):
 		stop = False
 		best_loss = float('inf')
 		no_improvement = 0
+		epoch = 0
 
 		if ovr:
-			criterion = nn.CrossEntropyLoss(weight=torch.Tensor([0.1,0.9]).type(dtype))
+			criterion = nn.CrossEntropyLoss(weight=torch.Tensor([0.2,1]).type(dtype))
 		else:
 			criterion = nn.CrossEntropyLoss()
 
@@ -71,8 +74,6 @@ class Net1(nn.Module):
 
 				# Train
 				out = self(mini_batch_x)
-				_,y_pred = out.max(1)
-
 				loss = criterion(out,mini_batch_y) 
 
 				batch_losses = np.append(batch_losses,loss.data[0])
@@ -83,16 +84,17 @@ class Net1(nn.Module):
 
 			train_losses = np.append(train_losses,np.mean(batch_losses))
 
+			adjust_learning_rate(opt,epoch)
 
 			#Validate
 			self.eval()
 			out = self(X_test)
-			_,y_pred = out.max(1)
 			loss = criterion(out,y_test)
 			test_losses = np.append(test_losses,loss.data[0])
 
+			epoch += 1
 
-			stop,no_improvement,best_loss = self.hara_kiri(best_loss,test_losses[-1],no_improvement,rp.tolerance,n_class)	
+			stop,no_improvement,best_loss = self.hara_kiri(best_loss,test_losses[-1],no_improvement,10,n_class)	
 
 
 		return train_losses,test_losses
@@ -118,3 +120,14 @@ class Net1(nn.Module):
 			no_improvement +=1
 
 		return True if no_improvement == tolerance else False,no_improvement,best_loss
+
+
+def adjust_learning_rate(optimizer,epoch):
+
+	"""
+	Sets the learning rate to the initial lr decayed by 0.8 every 10 epochs
+	"""
+
+	lr = rp.lr * (0.8 ** (epoch // 10))
+	for param_group in optimizer.param_groups:
+		param_group['lr'] = lr

@@ -44,7 +44,7 @@ def _form_and_sanitize_docstring(s):
     url += ')'
     return url
 
-# TODO: lookup tensorboard docs to understand the graph (medium)
+
 def GetOpNodeProducer(embed_docstring=False, **kwargs):
     def ReallyGetOpNode(op, op_id):
         if op.name:
