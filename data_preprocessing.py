@@ -50,7 +50,7 @@ def load_data():
 
 
 
-def prepare_data(X_train,X_test,y_train,y_test,unknown_data,ovr):
+def prepare_data(X_train,X_test,y_train,y_test,unknown_data):
 
 
 	if torch.cuda.is_available():
@@ -74,8 +74,6 @@ def prepare_data(X_train,X_test,y_train,y_test,unknown_data,ovr):
 
 		training_set = np.append(training_set,augmented_data).reshape((-1,training_set.shape[1]))		
 	'''
-	
-	
 
 	test_set = np.append(X_test,y_test,axis=1)
 
@@ -85,40 +83,6 @@ def prepare_data(X_train,X_test,y_train,y_test,unknown_data,ovr):
 	unknown_data = normalize(unknown_data)
 
 	np.random.shuffle(training_set)
-
-
-	
- 	# Prepare the data for ovr network architecture	
-	if ovr:
-		
-		training_sets = []
-		testing_set = []
-
-		for i in range(5):
-			y_train = np.copy(training_set[:,-1])
-			index_train = y_train == i
-			index_train = index_train.reshape((index_train.shape[0],))
-			y_train[~index_train] = 0
-			y_train[index_train] = 1
-
-			y_test = np.copy(test_set[:,-1])
-			index_test = y_test == i
-			index_test = index_test.reshape((index_test.shape[0],))
-			y_test[~index_test] = 0
-			y_test[index_test] = 1
-
-
-			y_train = Variable(torch.Tensor(y_train).type(dtype)).long()
-			y_test = Variable(torch.Tensor(y_test).type(dtype)).long()
-			training_sets.append(y_train)
-			testing_set.append(y_test)
-
-
-		X_train = Variable(torch.Tensor(training_set[:,:-1]).type(dtype))
-		X_test = Variable(torch.Tensor(test_set[:,:-1]).type(dtype))
-		unknown_data = Variable(torch.Tensor(unknown_data).type(dtype))
-
-		return X_train,X_test,training_sets,testing_set,unknown_data,dtype
 
 
 	X_train = Variable(torch.Tensor(training_set[:,:-1]).type(dtype))

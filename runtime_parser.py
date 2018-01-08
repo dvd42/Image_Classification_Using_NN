@@ -8,7 +8,6 @@ def process_runtime_arguments():
         if sys.argv[1] == "--help":
                 print("Usage: main.py")
                 print("-lr learning_rate for the model")
-                print("-ovr use ovr architecture")
                 print("-dth depth of the network architecture")
                 print("-wth width reduction rate of the network architecture")
                 print("-size the size of the mini-batches used for the Gradient Descent")
@@ -26,8 +25,7 @@ def process_runtime_arguments():
 argvs = process_runtime_arguments()
 
 # Get the the values of the runtime parameters
-lr = float(argvs[argvs.index("-lr") + 1]) if "-lr" in argvs else 0.001
-ovr = True if "-ovr" in argvs else False
+lr = float(argvs[argvs.index("-lr") + 1]) if "-lr" in argvs else 0.1
 size = int(argvs[argvs.index("-size") + 1]) if "-size" in argvs else 128
 verbose = True if "-v" in argvs else False
 width = float(argvs[argvs.index("-wth") + 1]) if "-wth" in argvs else 1

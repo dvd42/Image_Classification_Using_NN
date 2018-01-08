@@ -41,7 +41,7 @@ class Net1(nn.Module):
 		
 		return x
 
-	def train_validate(self,X_train,y_train,X_test,y_test,opt,mini_batch_size,n_class,ovr,dtype):
+	def train_validate(self,X_train,y_train,X_test,y_test,opt,mini_batch_size,dtype):
 
 
 		train_losses = test_losses =  np.array([])
@@ -51,11 +51,7 @@ class Net1(nn.Module):
 		no_improvement = 0
 		epoch = 0
 
-		if ovr:
-			criterion = nn.CrossEntropyLoss(weight=torch.Tensor([0.2,1]).type(dtype))
-		else:
-			criterion = nn.CrossEntropyLoss()
-
+		criterion = nn.CrossEntropyLoss()
 
 		while(not stop):
 
@@ -93,7 +89,7 @@ class Net1(nn.Module):
 
 			epoch += 1
 
-			stop,no_improvement,best_loss = self.hara_kiri(best_loss,test_losses[-1],no_improvement,10,n_class)	
+			stop,no_improvement,best_loss = self.hara_kiri(best_loss,test_losses[-1],no_improvement,10)	
 
 
 		return train_losses,test_losses
@@ -108,10 +104,10 @@ class Net1(nn.Module):
 		return y_pred,out
 
 
-	def hara_kiri(self,best_loss,current_loss,no_improvement,tolerance,n_class):
+	def hara_kiri(self,best_loss,current_loss,no_improvement,tolerance):
 
 		if current_loss < best_loss:
-			torch.save(self,"Models/Best_Model_" + n_class + ".pkl")
+			torch.save(self,"Models/Best_Model.pkl")
 			best_loss = current_loss
 			no_improvement = 0
 
