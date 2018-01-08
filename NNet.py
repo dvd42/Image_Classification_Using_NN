@@ -19,25 +19,24 @@ class Net1(nn.Module):
 		fan_out = int(199*self.width)
 		for i in range(self.depth-1):
 			self.__setattr__('h' + str(i), nn.Linear(fan_in,fan_out))
-			#init.xavier_uniform(self.__getattr__('h' + str(i)).weight,gain=init.calculate_gain('leaky_relu'))
-
-			if i == self.depth-3:
-				self.__setattr__('dropout0.5',nn.Dropout(0.5,inplace=True))
+			init.orthogonal(self.__getattr__('h' + str(i)).weight,gain=init.calculate_gain('leaky_relu'))
 
 			fan_in = fan_out
 			fan_out = int(fan_in*self.width)
 
+			
+		self.__setattr__('dropout0.5',nn.Dropout(0.5,inplace=True))
 		self.__setattr__('fc',nn.Linear(fan_in,num_classes))
-		#init.xavier_uniform(self.__getattr__('fc').weight,gain=init.calculate_gain('leaky_relu'))
+		init.orthogonal(self.__getattr__('fc').weight,gain=init.calculate_gain('leaky_relu'))
 
 	def forward(self,x):
 
 
 		for i in range(self.depth - 1):
 			x = F.leaky_relu(self.__getattr__('h' + str(i))(x))
-			if i == self.depth-3:
-				self.__getattr__('dropout0.5')(x)	
-
+			
+					
+		self.__getattr__('dropout0.5')(x)
 		x = self.__getattr__('fc')(x)
 		
 		return x

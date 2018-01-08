@@ -59,8 +59,8 @@ def run_full_net(num_classes,learning_rate,width,depth,mini_batch_size,ovr):
 	
 	g.generate_graph(model,X_train)
 
-	if not rp.verbose:
-		fw.create_data_csv(learning_rate,depth,width,mini_batch_size,rp.m,len(test_losses)-10,accuracy)
+	
+	fw.create_data_csv(learning_rate,depth,width,mini_batch_size,rp.m,len(test_losses)-10,accuracy)
 
 	# Store unknown_data prediction 
 	y_pred,_ = model.test(unknown_data)

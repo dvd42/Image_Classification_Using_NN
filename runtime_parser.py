@@ -14,7 +14,7 @@ def process_runtime_arguments():
                 print("-size the size of the mini-batches used for the Gradient Descent")
                 print("-m momentum value")
                 print ("-v will show results on the standard output")
-                print("NOTE: The default runtime parameters are: main.py -dth 3 -wth 0.5 -lr 0.001 -size 128")
+                print("NOTE: The default runtime parameters are: main.py -dth 2 -wth 1 -lr 0.1 -size 128")
                 sys.exit(1)
 
     argvs = []
@@ -33,5 +33,4 @@ verbose = True if "-v" in argvs else False
 width = float(argvs[argvs.index("-wth") + 1]) if "-wth" in argvs else 1
 depth = int(argvs[argvs.index("-dth") + 1]) if "-dth" in argvs else 2
 m = float(argvs[argvs.index("-m") + 1]) if "-m" in argvs else 0.9
-
 
